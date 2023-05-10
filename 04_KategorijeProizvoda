@@ -1,0 +1,110 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace Kategorije_Proizvoda_04SS
+{
+    public partial class Form1 : Form
+    {
+        public Form1()
+        {
+            InitializeComponent();
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            RefreshGUI();
+        }
+
+        private void RefreshGUI()
+        {
+            dgvCategory.DataSource = GetCategory();
+            dgvCategory.Columns["Products"].Visible = false;
+            
+        }
+
+        private object GetCategory()
+        {
+            using (var context = new EF_DBEntities())
+            {
+                return context.Categories.ToList();
+            }
+        }
+
+        private void btnAdd_Click(object sender, EventArgs e)
+        {
+            Category selectedCategory = dgvCategory.CurrentRow.DataBoundItem as Category;
+
+            using (var context = new EF_DBEntities())
+            {
+                string name = tbProductsName.Text;
+                int quantity = int.Parse(tbQuantity.Text);
+                int price = int.Parse(tbUnitPrice.Text);
+                context.Categories.Attach(selectedCategory);
+
+                Product newProduct = new Product
+                {
+                    Name = name,
+                    Quantity = quantity,
+                    UnitPrice = price,
+                    Category = selectedCategory
+
+                };
+                context.Products.Add(newProduct);
+                context.SaveChanges();
+            }
+
+        }
+        private void btnDelete_Click(object sender, EventArgs e)
+        {
+            Product selectedProduct = dgvProducts.CurrentRow.DataBoundItem as Product;
+
+            using (var context = new EF_DBEntities())
+            {
+                context.Products.Attach(selectedProduct);
+                context.Products.Remove(selectedProduct);
+                context.SaveChanges();
+            }
+            RefreshGUI();
+        }
+
+        private void dgvCategory_SelectionChanged(object sender, EventArgs e)
+        {
+            Category selectedCategory = dgvCategory.CurrentRow.DataBoundItem as Category;
+
+            using (var context = new EF_DBEntities())
+            {
+                context.Categories.Attach(selectedCategory);
+                dgvProducts.DataSource = selectedCategory.Products.ToList();
+
+            }
+        }
+    }
+}
+
+
+nova klasa-->Category_code_cs
+
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Kategorije_Proizvoda_04SS
+{
+    public partial class Category
+    {
+        public override string ToString()
+        {
+            return Name;
+        }
+    }
+}
