@@ -1,0 +1,151 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace ProductsAndCategories_09_SS
+{
+    public partial class Products : Form
+    {
+        public Products()
+        {
+            InitializeComponent();
+        }
+
+        private void Products_Load(object sender, EventArgs e)
+        {
+            RefreshGUI();
+        }
+
+        private void RefreshGUI()
+        {
+            dgvProducts.DataSource = GetProducts();
+            dgvProducts.Columns["Category"].Visible = false;
+        }
+
+        private object GetProducts()
+        {
+            using (var context = new EF_DBEntities())
+            {
+                return context.Products.ToList();
+            }
+        }
+
+        private void btnAdd_Click(object sender, EventArgs e)
+        {
+            Product selectedProduct = GetSelectedProduct();
+            AddProduct form = new AddProduct(selectedProduct);
+            form.ShowDialog();
+            RefreshGUI();
+        }
+
+        private Product GetSelectedProduct()
+        {
+            return dgvProducts.CurrentRow.DataBoundItem as Product;
+        }
+
+        private void btnDelete_Click(object sender, EventArgs e)
+        {
+            Product selectedProduct = GetSelectedProduct();
+            using (var context = new EF_DBEntities())
+            {
+                context.Products.Attach(selectedProduct);
+                context.Products.Remove(selectedProduct);
+                context.SaveChanges();
+                RefreshGUI();
+            }
+        }
+    }
+}
+
+
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace ProductsAndCategories_09_SS
+{
+    public partial class AddProduct : Form
+    {
+        private Product selectedProduct;
+
+        public AddProduct(Product Product)
+        {
+            InitializeComponent();
+            selectedProduct = Product;
+        }
+
+        private void Form2_Load(object sender, EventArgs e)
+        {
+            FillCategory();
+        }
+
+        private void FillCategory()
+        {
+            List<Category> categories = new List<Category>();
+            using (var context = new EF_DBEntities())
+            {
+                categories = context.Categories.ToList();
+            }
+            cbCategory.DataSource = categories;
+        }
+
+        private void btnOk_Click(object sender, EventArgs e)
+        {
+            using (var context = new EF_DBEntities())
+            {
+                string name = tbName.Text;
+                int quantity = int.Parse(tbQuantity.Text);
+                double price = double.Parse(tbUnitPrice.Text);
+                Category category = cbCategory.SelectedItem as Category;
+
+                Product newProduct = new Product()
+                {
+                    Name = name,
+                    Quantity = quantity,
+                    UnitPrice = price,
+                    Category = category
+                };
+                context.Products.Add(newProduct);
+                context.SaveChanges();
+            }
+            Close();
+        }
+
+        private void btnCancel_Click(object sender, EventArgs e)
+        {
+            Close();
+        }
+    }
+}
+
+
+category.code.cs
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ProductsAndCategories_09_SS
+{
+    public partial class Category
+    {
+        public override string ToString()
+        {
+            return Name;
+        }
+    }
+}
