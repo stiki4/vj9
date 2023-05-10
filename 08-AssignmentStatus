@@ -1,0 +1,151 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace Assignments_08_SS
+{
+    public partial class FrmAssignment : Form
+    {
+        public FrmAssignment()
+        {
+            InitializeComponent();
+        }
+
+        private void FrmAssignment_Load(object sender, EventArgs e)
+        {
+            RefreshGUI();
+        }
+
+        private void RefreshGUI()
+        {
+            dgvAssignment.DataSource = GetAssignment();
+            dgvAssignment.Columns["AssignmentStatus"].Visible = false;
+        }
+
+        private object GetAssignment()
+        {
+            using (var context = new EF_DBEntities())
+            {
+                return context.Assignments.ToList();
+            }
+        }
+
+        private void btnAdd_Click(object sender, EventArgs e)
+        {
+            Assignment selectedAssignment = GetSelectedAssignment();
+            FrmAddNew form = new FrmAddNew(selectedAssignment);
+            form.ShowDialog();
+            RefreshGUI();
+
+            
+        }
+
+        private Assignment GetSelectedAssignment()
+        {
+            return dgvAssignment.CurrentRow.DataBoundItem as Assignment;
+        }
+
+        private void btnDelete_Click(object sender, EventArgs e)
+        {
+            Assignment selectedAssignment = GetSelectedAssignment();
+            using (var context = new EF_DBEntities())
+            {
+                context.Assignments.Attach(selectedAssignment);
+                context.Assignments.Remove(selectedAssignment);
+                context.SaveChanges();
+            }
+            RefreshGUI();
+        }
+    }
+}
+
+
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace Assignments_08_SS
+{
+    public partial class FrmAddNew : Form
+    {
+        private Assignment selectedAssignment;
+        public FrmAddNew(Assignment assignment)
+        {
+            InitializeComponent();
+            selectedAssignment = assignment;
+        }
+ 
+
+        private void FrmAddNew_Load(object sender, EventArgs e)
+        {
+            FillStatus();
+        }
+
+        private void FillStatus()
+        {
+            List<AssignmentStatus> statuses = new List<AssignmentStatus>();
+            using (var context = new EF_DBEntities())
+            {
+                statuses = context.AssignmentStatuses.ToList();
+            }
+            cbStatus.DataSource = statuses;
+        }
+
+        private void btnSave_Click(object sender, EventArgs e)
+        {
+            using (var context = new EF_DBEntities())
+            {
+                string student = tbStudent.Text;
+                string description = tbDescription.Text;
+                int points = int.Parse(tbPoints.Text);
+                AssignmentStatus status = cbStatus.SelectedItem as AssignmentStatus;
+
+                Assignment newAssignment = new Assignment()
+                {
+                    Student = student,
+                    Description = description,
+                    Points = points,
+                    AssignmentStatus = status
+
+                };
+                context.Assignments.Add(newAssignment);
+                context.SaveChanges();
+            }
+            Close();
+        }
+
+        private void btnCancel_Click(object sender, EventArgs e)
+        {
+            Close();
+        }
+    }
+}
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Assignments_08_SS
+{
+    public partial class AssignmentStatus
+    {
+        public override string ToString()
+        {
+            return Status;
+        }
+    }
+}
