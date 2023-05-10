@@ -1,0 +1,103 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace Stanovnici_hrvatske_SS
+{
+    public partial class Form1 : Form
+    {
+        public Form1()
+        {
+            InitializeComponent();
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            RefreshGUI();
+        }
+
+        private void RefreshGUI()
+        {
+            dgvStanovnici.DataSource = GetStanovnici();
+            dgvStanovnici.Columns["Adrese"].Visible = false;
+        }
+
+        private object GetStanovnici()
+        {
+            using (var context = new LabsEntities())
+            {
+                return context.Stanovnicis.ToList();
+            }
+        }
+
+        private void btnAdd_Click(object sender, EventArgs e)
+        {
+            Stanovnici selectedStanovnik = dgvStanovnici.CurrentRow.DataBoundItem as Stanovnici;
+
+            using (var context = new LabsEntities())
+            {
+                string ime = tbIme.Text;
+                string prezime = tbPrezime.Text;
+                string oib = tbOIB.Text;
+                string jmbg = tbJMBG.Text;
+                context.Stanovnicis.Attach(selectedStanovnik);
+
+                Stanovnici newStanovnik = new Stanovnici
+                {
+                    Ime = ime,
+                    Prezime = prezime,
+                    OIB = oib,
+                    JMBG = jmbg
+                    
+                };
+                context.Stanovnicis.Add(newStanovnik);
+                context.SaveChanges();
+            }
+            RefreshGUI();
+
+        }
+
+        private void dgvStanovnici_SelectionChanged(object sender, EventArgs e)
+        {
+            Stanovnici selectedStanovnici = dgvStanovnici.CurrentRow.DataBoundItem as Stanovnici;
+
+            using (var context = new LabsEntities())
+            {
+                context.Stanovnicis.Attach(selectedStanovnici);
+                dgvAdresa.DataSource = selectedStanovnici.Adrese.ToList();
+                dgvAdresa.Columns["Mjesta"].Visible = false;
+                dgvAdresa.Columns["Stanovnici"].Visible = false;
+            }
+        }
+
+        private void btnAdresa_Click(object sender, EventArgs e)
+        {
+            int idStan = int.Parse(tbStan.Text);
+            int idMjesto = int.Parse(tbMjesto.Text);
+            string adresa = tbAdresa.Text;
+            DateTime datum = dateTimePicker1.Value.Date;
+
+            Adrese adress = new Adrese()
+            {
+                IDStanovnika = idStan,
+                IDMjesta = idMjesto,
+                Adresa = adresa,
+                AktivnaDo = datum
+            };
+            using (var context = new LabsEntities())
+            {
+                context.Adrese.Add(adress);
+                _ = context.SaveChanges();
+            }
+            RefreshGUI();
+        }
+
+  
+    }
+}
