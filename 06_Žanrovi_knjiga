@@ -1,0 +1,110 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace Žanrovi_knjiga_06_SS
+{
+    public partial class Form1 : Form
+    {
+        public Form1()
+        {
+            InitializeComponent();
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            RefreshGUI();
+        }
+
+        private void RefreshGUI()
+        {
+            cbGenre.DataSource = GetGenres();
+            
+        }
+
+        private object GetGenres()
+        {
+            using (var context = new EF_DBEntities())
+            {
+                return context.Genres.ToList();
+            }
+        }
+
+        private void btnAdd_Click(object sender, EventArgs e)
+        {
+            Genre selectedGenre = cbGenre.SelectedItem as Genre;
+
+            using (var context = new EF_DBEntities())
+            {
+                string title = tbTitle.Text;
+                int numOfPages = int.Parse(tbNumOfPages.Text);
+                string mainAuthor = tbMainAuthor.Text;
+                context.Genres.Attach(selectedGenre);
+
+                Book newBook = new Book
+                {
+                    Title = title,
+                    NumOfPages = numOfPages,
+                    MainAuthor = mainAuthor,
+                    Genre = selectedGenre,
+                };
+                context.Books.Add(newBook);
+                context.SaveChanges();
+            }
+            using (var context = new EF_DBEntities())
+            {
+                context.Genres.Attach(selectedGenre);
+                dgvBooks.DataSource = selectedGenre.Books.ToList();
+            }
+        }
+
+        private void btnDelete_Click(object sender, EventArgs e)
+        {
+            Book selectedBook = dgvBooks.CurrentRow.DataBoundItem as Book;
+
+            using (var context = new EF_DBEntities())
+            {
+                context.Books.Attach(selectedBook);
+                context.Books.Remove(selectedBook);
+                context.SaveChanges();
+            }
+            RefreshGUI();
+        }
+
+        private void cbGenre_SelectedValueChanged(object sender, EventArgs e)
+        {
+            Genre selectedGenre = cbGenre.SelectedItem as Genre;
+
+            using (var context = new EF_DBEntities())
+            {
+                context.Genres.Attach(selectedGenre);
+                dgvBooks.DataSource = selectedGenre.Books.ToList();
+            }
+        }
+    }
+}
+
+nov klasa-->genre.code.cs
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Žanrovi_knjiga_06_SS
+{
+    public partial class Genre
+    {
+        public override string ToString()
+        {
+            return this.Name;
+        }
+    }
+}
