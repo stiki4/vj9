@@ -1,0 +1,114 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Runtime.InteropServices;
+using System.Runtime.Remoting.Contexts;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace Žanrovi_knjiga_SS
+{
+    public partial class Form1 : Form
+    {
+        public Form1()
+        {
+            InitializeComponent();
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            RefreshGUI();
+        }
+
+        private void RefreshGUI()
+        {
+            dgvGenre.DataSource = GetGenres();
+            dgvGenre.Columns["Books"].Visible = false;
+
+        }
+
+        private object GetGenres()
+        {
+            using (var context = new EF_DBEntities())
+            {
+                return context.Genres.ToList();
+            }
+        }
+
+        private void btnAdd_Click(object sender, EventArgs e)
+        {
+            Genre selectedGenres = dgvGenre.CurrentRow.DataBoundItem as Genre;
+            
+            using (var context = new EF_DBEntities())
+            {
+                string title = tbTitle.Text;
+                int numOfPages = Convert.ToInt32(textBox2.Text);
+                string mainAuthor = textBox3.Text;
+                context.Genres.Attach(selectedGenres);
+
+                Book newBook = new Book
+                {
+                    Title = title,
+                    NumOfPages = numOfPages,
+                    MainAuthor = mainAuthor,
+                    IdGenres = selectedGenres.Id,
+                    Genre = selectedGenres
+
+                };
+                context.Books.Add(newBook);
+                context.SaveChanges();
+                
+            }
+            RefreshGUI();
+        }
+
+        private void btnDelete_Click(object sender, EventArgs e)
+        {
+            Book selectedBook = dgvBooks.CurrentRow.DataBoundItem as Book;
+
+            using (var context = new EF_DBEntities())
+            {
+                context.Books.Attach(selectedBook);
+                context.Books.Remove(selectedBook);
+                context.SaveChanges();
+            }
+            RefreshGUI();
+
+        }
+
+        private void dgvGenre_SelectionChanged(object sender, EventArgs e)
+        {
+            Genre selectedGenres = dgvGenre.CurrentRow.DataBoundItem as Genre;
+            using (var context = new EF_DBEntities())
+            {
+                context.Genres.Attach(selectedGenres);
+                dgvBooks.DataSource = selectedGenres.Books.ToList();
+            }
+        }
+    }
+}
+
+
+nova klasa --> genre.code.cs
+
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Žanrovi_knjiga_SS
+{
+    public partial class Genre
+    {
+        public override string ToString()
+        {
+            return Name;
+        }
+    }
+}
