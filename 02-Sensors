@@ -1,0 +1,135 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace Sensor_2_SS
+{
+    public partial class Sensors : Form
+    {
+        public Sensors()
+        {
+            InitializeComponent();
+        }
+
+        private void Sensors_Load(object sender, EventArgs e)
+        {
+            RefreshGUI();
+        }
+        private void RefreshGUI() 
+        {
+            dgvSensors.DataSource = GetSensors();
+            dgvSensors.Columns["MeasurementUnit"].Visible = false;
+            dgvSensors.Columns["SensorReadings"].Visible = false;
+            dgvSensors.Columns["SensorType"].Visible = false;
+        }
+        private object GetSensors()
+        {
+            using (var context = new DB_EntityEntities())
+            {
+                return context.Sensors.ToList();
+            }
+        }
+
+        private void btnAddSensor_Click(object sender, EventArgs e)
+        {
+            Sensor selectedSensor = GetSelectedSensor();
+            AddSensors form = new AddSensors(selectedSensor);
+            form.ShowDialog();
+            RefreshGUI();
+        }
+
+        private Sensor GetSelectedSensor()
+        {
+            return dgvSensors.CurrentRow.DataBoundItem as Sensor;
+        }
+        private void btnDeleteSensor_Click(object sender, EventArgs e)
+        {
+            Sensor selectedSensor = GetSelectedSensor();
+            using (var context = new DB_EntityEntities())
+            {
+                context.Sensors.Attach(selectedSensor);
+                context.Sensors.Remove(selectedSensor);
+                context.SaveChanges();
+            }
+            RefreshGUI();
+        }
+    }
+}
+
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace Sensor_2_SS
+{
+    public partial class AddSensors : Form
+    {
+        private Sensor selectedSensor;
+        public AddSensors(Sensor sensor)
+        {
+            InitializeComponent();
+            selectedSensor = sensor;
+        }
+
+        private void AddSensors_Load(object sender, EventArgs e)
+        {
+            FillType();
+            FillUnit();
+        }
+
+        private void btnAdd_Click(object sender, EventArgs e)
+        {
+            using (var context = new DB_EntityEntities())
+            {
+                string name = tbName.Text;
+                SensorType type = cbType.SelectedItem as SensorType;
+                MeasurementUnit unit = cbUnit.SelectedItem as MeasurementUnit;
+
+                Sensor newSensor = new Sensor()
+                {
+                    Name = name,
+                    SensorType = type,
+                    MeasurementUnit = unit,
+                };
+                context.Sensors.Add(newSensor);
+                context.SaveChanges();
+            }
+            Close();
+        }
+
+        private void btnCancel_Click(object sender, EventArgs e)
+        {
+            Close();
+        }
+        private void FillUnit()
+        {
+            List<MeasurementUnit> units = new List<MeasurementUnit>();
+            using (var context = new DB_EntityEntities())
+            {
+                units = context.MeasurementUnits.ToList();
+            }
+            cbUnit.DataSource = units;
+        }
+        private void FillType()
+        {
+            List<SensorType> types = new List<SensorType>();
+            using (var context = new DB_EntityEntities())
+            {
+                types = context.SensorTypes.ToList();
+            }
+            cbType.DataSource = types;
+        }
+    }
+}
