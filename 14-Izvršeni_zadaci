@@ -1,0 +1,117 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using System.Windows.Forms.VisualStyles;
+
+namespace Izvršeni_zadaci_14_SS
+{
+    public partial class Form1 : Form
+    {
+        public Form1()
+        {
+            InitializeComponent();
+            cbPrioritet.DataSource = FillPrioriteti();
+        }
+
+        private object FillPrioriteti()
+        {
+            List<string> prioriteti = new List<string>();
+
+            List<Task> tasks = GetTasks();
+
+            foreach (var item in tasks)
+            {
+                prioriteti.Add(item.Priority.ToString());
+            }
+            return prioriteti;
+
+        }
+
+        private List<Task> GetTasks()
+        {
+            using (var context = new EF_DBEntities())
+            {
+                return context.Tasks.ToList();
+            }
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            RefreshGUI();
+        }
+
+        private void RefreshGUI()
+        {
+            List<Task> tasks = new List<Task>();
+            List<Task> completedList = new List<Task>();
+            List<Task> notCompletedTask = new List<Task>();
+
+            using (var context = new EF_DBEntities())
+            {
+                tasks = context.Tasks.ToList();
+            }
+
+            foreach (Task task in tasks)
+            {
+                if (task.Completed)
+                {
+                    completedList.Add(task);
+                }
+                else
+                {
+                    notCompletedTask.Add(task);
+                }
+            }
+
+            dgvIzvrseno.DataSource = completedList;
+            dgvIzvrseno.Columns["Employee"].Visible = false;
+            dgvOtvoreno.DataSource = notCompletedTask;
+            dgvOtvoreno.Columns["Employee"].Visible = false;
+        }
+    
+
+        private void btnAddTask_Click(object sender, EventArgs e)
+        {
+            
+
+            using (var context = new EF_DBEntities())
+            {
+                string description = tbDescription.Text;
+                int priority = int.Parse(cbPrioritet.Text);
+                Task selectedTask = dgvOtvoreno.CurrentRow.DataBoundItem as Task;
+                context.Tasks.Attach(selectedTask);
+
+                Task newTask = new Task()
+                {
+                    Description = description,
+                    Priority = priority,
+                    Completed = false,
+                   
+                };
+                context.Tasks.Add(newTask);
+                context.SaveChanges();
+            }
+            RefreshGUI();
+        }
+
+        private void btnMarkAsCompleted_Click(object sender, EventArgs e)
+        {
+            Task selectedTask = dgvOtvoreno.CurrentRow.DataBoundItem as Task;
+
+            using (var context = new EF_DBEntities())
+            {
+                context.Tasks.Attach(selectedTask);
+                selectedTask.Completed = true;
+                context.SaveChanges();
+
+            }
+            RefreshGUI();
+        }
+    }
+}
